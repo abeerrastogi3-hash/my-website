@@ -1,9 +1,518 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Website</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow - Notes</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #121212;
+            --bg-sidebar: #181818;
+            --bg-card: #1e1e1e;
+            --bg-card-hover: #262626;
+            --bg-input: #1a1a1a;
+            --border-color: #2c2c2c;
+            --accent-green: #bcf844;
+            --accent-green-hover: #a8e335;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --text-sub: #b0b0b0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 15px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            padding-left: 5px;
+        }
+
+        .logo-area i {
+            color: var(--accent-green);
+            font-size: 1.3rem;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-grow: 1;
+        }
+
+        .nav-links li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links li.active a, .nav-links li a:hover {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .sidebar-footer {
+            font-size: 0.755rem;
+            color: var(--text-muted);
+            padding-left: 5px;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 40px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .notes-title-area h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .notes-title-area p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-new {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-new:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        /* --- EDITOR SECTION & SAVED NOTES CONTAINER --- */
+        .workspace {
+            display: flex;
+            gap: 30px;
+            flex-grow: 1;
+            height: calc(100% - 100px);
+        }
+
+        .editor-container {
+            flex-grow: 1;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(255,255,255,0.01);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .editor-toolbar select {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .toolbar-tools {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toolbar-tools i {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .toolbar-tools i:hover {
+            color: var(--text-main);
+        }
+
+        /* Editor Input & Textarea fields */
+        .editor-content-area {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .note-title-input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.25rem;
+            font-weight: 600;
+            outline: none;
+            width: 100%;
+        }
+
+        .note-body-input {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            outline: none;
+            resize: none;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        /* Update Button */
+        .btn-update {
+            background-color: var(--accent-green);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            align-self: flex-start;
+            transition: background 0.2s;
+        }
+
+        .btn-update:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        /* --- RIGHT SIDEBAR: SAVED NOTES --- */
+        .saved-notes-sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .saved-notes-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 9px 12px 9px 35px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .saved-notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .note-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .note-card:hover, .note-card.active {
+            border-color: var(--accent-green);
+            background-color: var(--bg-card-hover);
+        }
+
+        .note-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .note-card-title i {
+            color: var(--accent-green);
+            font-size: 0.8rem;
+        }
+
+        .note-card-snippet {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World! Welcome to my website.</h1>
+
+    <!-- Sidebar Navigation -->
+    <aside>
+        <div>
+            <div class="logo-area">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>StudyFlow</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="#"><i class="fa-solid fa-microphone"></i> Voice Notes</a></li>
+                <li class="active"><a href="#"><i class="fa-solid fa-book-open"></i> Notes</a></li>
+                <li><a href="#"><i class="fa-solid fa-clone"></i> Flashcards</a></li>
+                <li><a href="#"><i class="fa-solid fa-circle-question"></i> Quizzes</a></li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            Built for focused study
+        </div>
+    </aside>
+
+    <!-- Main Dynamic Application Screen -->
+    <main>
+        <div class="header-row">
+            <div class="notes-title-area">
+                <h1>Notes</h1>
+                <p>Write your own notes and save them here.</p>
+            </div>
+            <button class="btn-new" id="new-note-btn"><i class="fa-solid fa-plus"></i> New</button>
+        </div>
+
+        <div class="workspace">
+            <!-- Central Editor Pane -->
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <select id="text-style">
+                        <option>Normal</option>
+                        <option>Heading 1</option>
+                        <option>Heading 2</option>
+                    </select>
+                    <div class="toolbar-tools">
+                        <i class="fa-solid fa-bold" title="Bold"></i>
+                        <i class="fa-solid fa-italic" title="Italic"></i>
+                        <i class="fa-solid fa-underline" title="Underline"></i>
+                        <i class="fa-solid fa-strikethrough" title="Strikethrough"></i>
+                        <i class="fa-solid fa-align-left" title="Align Left"></i>
+                        <i class="fa-solid fa-align-center" title="Align Center"></i>
+                        <i class="fa-solid fa-quote-left" title="Quote"></i>
+                        <i class="fa-solid fa-code" title="Code block"></i>
+                        <i class="fa-regular fa-image" title="Image"></i>
+                        <i class="fa-solid fa-superscript" title="Superscript"></i>
+                    </div>
+                </div>
+                
+                <div class="editor-content-area">
+                    <input type="text" id="active-title" class="note-title-input" placeholder="Note Title...">
+                    <textarea id="active-body" class="note-body-input" placeholder="Write your notes content here..."></textarea>
+                    <button class="btn-update" id="save-btn"><i class="fa-solid fa-floppy-disk"></i> Update note</button>
+                </div>
+            </div>
+
+            <!-- Saved Notes Sidebar Pane -->
+            <div class="saved-notes-sidebar">
+                <div class="saved-notes-header">Saved notes</div>
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="Search notes...">
+                </div>
+                <div class="saved-notes-list" id="notes-list-container">
+                    <!-- Dynamic Note Cards injected via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initial mock data simulating your application state
+        let notes = [
+            {
+                id: 1,
+                title: "Variables",
+                body: "Variables independent variables, you change..."
+            },
+            {
+                id: 2,
+                title: "SI Units",
+                body: "SI Units & Scientific & Scientific Notation\n\nSI: Stands for standard unit (of measurement) useful for both daily life and science. There are 7 total SI units and, they are defined based on constants of nature. Quantity & quality the 2 types of data you can collect\n\nQuantative data: Any data that can be described as a number as well as a unit, often called numerical data\n\nQualitative data: Cannot be defined using a number, defined/described using words, characteristics or features of something.\n\nScientific notation: when a number of a quantity is being measured is expressed as a power of 10, it helps to make calculations with unusual large or small numbers less awkward"
+            },
+            {
+                id: 3,
+                title: "Crit C-Lab Report Writing",
+                body: "Data collection\nDuringbsp;data,collection,make&..."
+            },
+            {
+                id: 4,
+                title: "Scientific Method",
+                body: "Open research question\nWhat, the effect on &..."
+            }
+        ];
+
+        let activeNoteId = 2; // Default to SI Units note matching screenshot layout
+
+        const titleInput = document.getElementById('active-title');
+        const bodyInput = document.getElementById('active-body');
+        const notesListContainer = document.getElementById('notes-list-container');
+        const saveBtn = document.getElementById('save-btn');
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const searchInput = document.getElementById('search-input');
+
+        // Render notes list in the right sidebar
+        function renderNotes(filterText = "") {
+            notesListContainer.innerHTML = "";
+            const filteredNotes = notes.filter(n => 
+                n.title.toLowerCase().includes(filterText.toLowerCase()) || 
+                n.body.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            filteredNotes.forEach(note => {
+                const card = document.createElement('div');
+                card.className = `note-card ${note.id === activeNoteId ? 'active' : ''}`;
+                card.innerHTML = `
+                    <div class="note-card-title"><i class="fa-solid fa-book-open"></i> ${escapeHTML(note.title)}</div>
+                    <div class="note-card-snippet">${escapeHTML(note.body)}</div>
+                `;
+                card.addEventListener('click', () => {
+                    activeNoteId = note.id;
+                    loadActiveNote();
+                    renderNotes(searchInput.value);
+                });
+                notesListContainer.appendChild(card);
+            });
+        }
+
+        // Load active note into editor fields
+        function loadActiveNote() {
+            const currentNote = notes.find(n => n.id === activeNoteId);
+            if (currentNote) {
+                titleInput.value = currentNote.title;
+                bodyInput.value = currentNote.body;
+            }
+        }
+
+        // Save / Update active note content
+        saveBtn.addEventListener('click', () => {
+            const currentNote = notes.find(n => n.id === activeNoteId);
+            if (currentNote) {
+                currentNote.title = titleInput.value;
+                currentNote.body = bodyInput.value;
+                renderNotes(searchInput.value);
+                alert("Note updated successfully!");
+            }
+        });
+
+        // Create a new note
+        newNoteBtn.addEventListener('click', () => {
+            const newId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1;
+            const newNote = {
+                id: newId,
+                title: "Untitled Note",
+                body: "Start writing your note here..."
+            };
+            notes.unshift(newNote);
+            activeNoteId = newId;
+            loadActiveNote();
+            renderNotes(searchInput.value);
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            renderNotes(e.target.value);
+        });
+
+        // Simple HTML entity escape to prevent injections
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Initial setup load
+        loadActiveNote();
+        renderNotes();
+    </script>
 </body>
 </html>
